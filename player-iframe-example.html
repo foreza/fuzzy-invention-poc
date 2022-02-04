@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>FakePlayer</title>
+    <style>
+        body {
+            height: 400px;
+            width: 500px;
+            border: 3px solid black;
+        }
+
+        #mock-player {
+            position: relative;
+            display: block;
+            margin: 0 auto;
+        }
+
+        #log {
+            width: 100%;
+            height: 100px;
+            background-color: black;
+            color: white;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        #adReqButton {
+            width: 50%;
+            position: relative;
+            display: block;
+            margin: 5px auto;
+            color: blue;
+            background: aquamarine;
+        }
+    </style>
+</head>
+
+<body>
+
+    <video id="mock-player" controls height="250px">
+        <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm" type="video/webm">
+        Sorry, your browser doesn't support embedded videos.
+    </video>
+    <button id="adReqButton" onclick="makeAdRequest()">Sample Ad Request</button>
+    <div id="log">Do Something</div>
+
+    <script>
+
+        let parentEnvelope;
+        let logRef;
+
+        function logUpdate(msg) {
+            if (logRef) {
+                console.log("LOG: " + msg)
+                logRef.textContent = msg;
+            }
+        }
+
+        // Function that attempts to call the parent ATS js
+        function dispatchEnvelopeRequestEvent() {
+            try {
+                logUpdate("dispatchEnvelopeRequestEvent")
+                top.postMessage('ats-liveramp-envelope-request', '*');
+            } catch (e) {
+                if (typeof (top.contentWindow) != 'undefined') {
+                    logUpdate("Failover: dispatchEnvelopeRequestEvent to content window")
+                    top.contentWindow.postMessage('ats-liveramp-envelope-request', '*');
+                } else {
+                    logUpdate("failed to dispatch")
+                }
+            }
+        }
+
+
+        // Listener that receives envelope from the ATS parent
+        function receiveEnvelope(event) {
+            if (event && event.data && event.data.message === 'ats-liveramp-envelope-result') {
+                console.log(event.data.result, event.origin);
+                logUpdate("receiveEnvelope from: " + event.origin);
+                logUpdate("envelope: " + event.data.result);
+                parentEnvelope = JSON.parse(event.data.result);
+                console.log(parentEnvelope);
+            }
+        }
+
+
+        // Example ad request
+        function makeAdRequest() {
+            if (parentEnvelope == null) {
+                logUpdate("Envelope has not been retrieved from ATS")
+            } else {
+                logUpdate("Mock ad request made with: " + parentEnvelope.envelope);
+            }
+        }
+
+        window.addEventListener('message', receiveEnvelope, false);
+
+        (function () {
+            parentEnvelope = null;
+            logRef = document.getElementById("log");
+            dispatchEnvelopeRequestEvent();     // ask for an envelope on DOM loaded.
+        })();
+
+    </script>
+</body>
+
+</html>
