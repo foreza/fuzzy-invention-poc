@@ -66,14 +66,13 @@
                 logUpdate("dispatchEnvelopeRequestEvent")
                 // V1 support
                 top.postMessage('ats-liveramp-envelope-request', '*');
-
+                // V2 support
                 top.postMessage('ats-modules-liveramp-envelope-request', '*');
-                top.contentWindow.postMessage('ats-liveramp-envelope-request', '*');
-
             } catch (e) {
                 if (typeof (top.contentWindow) != 'undefined') {
                     logUpdate("Failover: dispatchEnvelopeRequestEvent to content window")
                     top.contentWindow.postMessage('ats-liveramp-envelope-request', '*');
+                    top.contentWindow.postMessage('ats-modules-liveramp-envelope-request', '*');
                 } else {
                     logUpdate("failed to dispatch")
                 }
@@ -85,7 +84,7 @@
         function receiveEnvelope(event) {
             if (event && event.data 
                 && (event.data.message === 'ats-liveramp-envelope-result' || 
-                event.data.message === 'ats-module-liveramp-envelope-result')) {
+                event.data.message === 'ats-modules-liveramp-envelope-result')) {
                 logUpdate("receiveEnvelope from: " + event.origin);
                 logUpdate("envelope: " + event.data.result);
                 parentEnvelope = JSON.parse(event.data.result);
