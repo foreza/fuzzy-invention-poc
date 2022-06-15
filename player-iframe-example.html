@@ -64,7 +64,12 @@
         function dispatchEnvelopeRequestEvent() {
             try {
                 logUpdate("dispatchEnvelopeRequestEvent")
+                // V1 support
                 top.postMessage('ats-liveramp-envelope-request', '*');
+
+                top.postMessage('ats-modules-liveramp-envelope-request', '*');
+                top.contentWindow.postMessage('ats-liveramp-envelope-request', '*');
+
             } catch (e) {
                 if (typeof (top.contentWindow) != 'undefined') {
                     logUpdate("Failover: dispatchEnvelopeRequestEvent to content window")
@@ -78,7 +83,9 @@
 
         // Listener that receives envelope from the ATS parent
         function receiveEnvelope(event) {
-            if (event && event.data && event.data.message === 'ats-liveramp-envelope-result') {
+            if (event && event.data 
+                && (event.data.message === 'ats-liveramp-envelope-result' || 
+                event.data.message === 'ats-module-liveramp-envelope-result')) {
                 logUpdate("receiveEnvelope from: " + event.origin);
                 logUpdate("envelope: " + event.data.result);
                 parentEnvelope = JSON.parse(event.data.result);
@@ -102,7 +109,7 @@
 
         (function () {
             parentEnvelope = null;
-            logRef = document.getElementById("log");
+            // logRef = document.getElementById("log");
             dispatchEnvelopeRequestEvent();     // ask for an envelope on DOM loaded.
         })();
 
