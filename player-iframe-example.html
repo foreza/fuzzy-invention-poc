@@ -79,12 +79,13 @@
         // Listener that receives envelope from the ATS parent
         function receiveEnvelope(event) {
             if (event && event.data && event.data.message === 'ats-liveramp-envelope-result') {
-                console.log(event.data.result, event.origin);
                 logUpdate("receiveEnvelope from: " + event.origin);
                 logUpdate("envelope: " + event.data.result);
                 parentEnvelope = JSON.parse(event.data.result);
                 console.log(parentEnvelope);
-            }
+            } 
+            // DEBUGGING ONLY
+            console.log(event.data.result, event.origin);
         }
 
 
