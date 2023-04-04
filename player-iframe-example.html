@@ -53,6 +53,9 @@
         let parentEnvelope;
         let logRef;
 
+        let hasDispatchedRequest = false;
+        let configurableTimeoutMS = 3000; 
+
         function logUpdate(msg) {
             if (logRef) {
                 console.log("LOG: " + msg)
@@ -61,7 +64,13 @@
         }
 
         // Function that attempts to call the parent ATS js
-        function dispatchEnvelopeRequestEvent() {
+        function dispatchEnvelopeRequestEvent(source) {
+
+            if (hasDispatchedRequest) {
+                logUpdate("Already dispatched event - source: ", source)
+                return;
+            }
+
             try {
                 logUpdate("dispatchEnvelopeRequestEvent")
                 // V1 support
@@ -82,14 +91,14 @@
 
         // Listener that receives envelope from the ATS parent
         function receiveEnvelope(event) {
-            if (event && event.data 
-                && (event.data.message === 'ats-liveramp-envelope-result' || 
-                event.data.message === 'ats-modules-liveramp-envelope-result')) {
+            if (event && event.data
+                && (event.data.message === 'ats-liveramp-envelope-result' ||
+                    event.data.message === 'ats-modules-liveramp-envelope-result')) {
                 logUpdate("receiveEnvelope from: " + event.origin);
                 logUpdate("envelope: " + event.data.result);
                 parentEnvelope = JSON.parse(event.data.result);
                 console.log(parentEnvelope);
-            } 
+            }
             // DEBUGGING ONLY
             console.log(event.data.result, event.origin);
         }
@@ -108,8 +117,21 @@
 
         (function () {
             parentEnvelope = null;
+
             logRef = document.getElementById("log");
-            dispatchEnvelopeRequestEvent();     // ask for an envelope on DOM loaded.
+
+            // If a publisher is leveraging v2, we have listeners that can be used:
+            // https://docs.liveramp.com/privacy-manager/en/ats-js-functions-and-events.html#envelopemoduleready
+            window.addEventListener("envelopeModuleReady", () => {
+                dispatchEnvelopeRequestEvent("v2_listener");     // ask for an envelope on DOM loaded.
+            });
+
+            // Otherwise, we can try to fetch it on DOM load (or after some delay for v1)
+            // The best approach here would be to always insist your player (AND ATS) is loaded earlier, however.
+            setTimeout(() => {
+                dispatchEnvelopeRequestEvent("manual_timeout");
+            }, configurableTimeoutMS);  
+            
         })();
 
     </script>
