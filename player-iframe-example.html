@@ -72,7 +72,7 @@
             }
 
             try {
-                logUpdate("dispatchEnvelopeRequestEvent")
+                logUpdate("dispatchEnvelopeRequestEvent: ", source)
                 // V1 support
                 top.postMessage('ats-liveramp-envelope-request', '*');
                 // V2 support
